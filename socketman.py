@@ -238,6 +238,10 @@ class _WebsocketThread(__Thread):
         self.__recv_cache = {}
     
     
+    def __del__(self):
+        self.stop()
+    
+    
     def run(self):
         from asyncio import set_event_loop
         set_event_loop(self.__loop)

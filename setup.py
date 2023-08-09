@@ -5,7 +5,7 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 setuptools.setup(
   name="socketman",
-  version="0.1.0",
+  version="0.1.1",
   python_requires=">=3.6",
   author="zloss",
   author_email="zlols@foxmail.com",
