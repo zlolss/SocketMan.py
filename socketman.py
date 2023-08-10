@@ -1,61 +1,6 @@
 
 '''
-# 对websockets端单线程封装，方便在任意线程中启动，无需额外的线程调度。
-# 开发的初衷是由于flask app在子线程中运行时无法同时兼容websocket服务
-# 用法
-## 启动服务（服务端）
-serv = WebsocketServer('0.0.0.0', 5001)
-serv.start()
-## 客户端访问地址，服务未运行时为None
-print(serv.url)
-
-## 设置处理接收消息的回调函数，wsid为传入消息的连接编号
-@serv.ON_RECV
-def func( txt, wsid):
-    print(txt)
-    
-## 用recv方法接收，默认阻塞（不推荐）
-serv.recv()
-# 当设置wsid!=None时只接收对应wsid连接发送的数据
-# block=False为非阻塞模式，无消息返回None
-# 接收过程中连接关闭则raise一个RuntimeError
-serv.recv(wsid=None, block=True)
-
-## 发送消息到客户端，wsid默认为None时将对所有连接广播消息
-serv.send(txt)
-serv.send(txt, wsid=None)
-
-## 关闭服务（注意线程启动关闭是一次性行为，如需再次使用需要重新实例化）
-serv.stop()
-
-## 检查是否已在运行
-serv.is_alive()
-
-## 客户端与服务端的调用逻辑基本一致
-## 启动客户端
-client = WebsocketClient('ws://localhost:5001')
-client.start()
-
-## 以下方法与服务端基本一致
-## 设置处理接收消息的回调函数
-@client.ON_RECV
-def func( txt ):
-    print(txt)
-    
-## 用recv方法接收，默认阻塞（不推荐）
-client.recv()
-
-
-## 发送消息到客户端，wsid默认为None时将对所有连接广播消息
-client.send(txt)
-
-## 关闭服务（注意线程启动关闭是一次性行为，如需再次使用需要重新实例化）
-client.stop()
-
-## 检查是否已在运行
-client.is_alive()
-
-
+todo: client.reconnect
 '''
 
 def getLocalIP():
@@ -105,7 +50,7 @@ class _WebsocketThread(__Thread):
         self.mtype = mtype
         if mtype==CONST.SERVER:
             self.ip = host_or_uri if isValidIPV4(host_or_uri) else getLocalIP()
-            self.serve_on = host_or_uri
+            self.serve_on = host_or_uri if host_or_uri.lower()!='localhost' else '127.0.0.1'
             self.__onrecv = lambda msg, wsid:print(f'server_receive from {wsid}: {msg}')
         elif mtype==CONST.CLIENT:
             self.uri = host_or_uri
