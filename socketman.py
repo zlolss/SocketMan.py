@@ -28,7 +28,7 @@ def isValidIPV4(txt):
                 return False
         except:
             return False
-    return txt.lower() not in  ["0.0.0.0", 'localhost']
+    return txt.lower() not in  ["0.0.0.0"]
 
     
 class CONST:
@@ -49,8 +49,8 @@ class _WebsocketThread(__Thread):
         super().__init__()
         self.mtype = mtype
         if mtype==CONST.SERVER:
-            self.ip = host_or_uri if isValidIPV4(host_or_uri) else getLocalIP()
-            self.serve_on = host_or_uri if host_or_uri.lower()!='localhost' else '127.0.0.1'
+            self.ip = host_or_uri if isValidIPV4(host_or_uri) or host_or_uri.lower()=='localhost' else getLocalIP()
+            self.serve_on = host_or_uri #if host_or_uri.lower()!='localhost' else '127.0.0.1'
             self.__onrecv = lambda msg, wsid:print(f'server_receive from {wsid}: {msg}')
         elif mtype==CONST.CLIENT:
             self.uri = host_or_uri
@@ -124,6 +124,8 @@ class _WebsocketThread(__Thread):
     
     
     async def handleConn(self, wsconn):
+        #from asyncio import to_thread
+        from threading import Thread
         wsid = id(wsconn)
         self.wsconns[wsid] = wsconn
         if wsid not in self.__recv_cache:
@@ -133,8 +135,14 @@ class _WebsocketThread(__Thread):
                 msg = await wsconn.recv()
                 
                 if self.mtype==CONST.SERVER:
+                    #t = Thread(target = self.__onrecv, args = [msg, wsid])
+                    #t.start()
+                    #await to_thread(self.__onrecv, args=[msg, wsid])
                     self.__onrecv( msg, wsid )
                 elif self.mtype==CONST.CLIENT:
+                    #t = Thread(target = self.__onrecv, args = [msg])
+                    #t.start()
+                    #await to_thread(self.__onrecv, args=[msg])
                     self.__onrecv( msg )
                 
                 self.__pushCache(msg, wsid)
@@ -175,17 +183,21 @@ class _WebsocketThread(__Thread):
     def stop(self):
         from asyncio import run_coroutine_threadsafe
         self.stopped = True
-        run_coroutine_threadsafe(self.astop(),loop=self.__loop)
         with self.__recv_condition:
             self.__recv_condition.notify_all()
-        self.join()
+        run_coroutine_threadsafe(self.astop(),loop=self.__loop)
+        try:
+            self.join()
+        except:
+            pass
         self.wsconns = {}
         self.__recv_cache = {}
     
     
     def __del__(self):
-        self.stop()
-    
+        if not self.stopped:
+            self.stop()
+
     
     def run(self):
         from asyncio import set_event_loop
