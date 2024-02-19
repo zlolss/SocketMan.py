@@ -135,15 +135,15 @@ class _WebsocketThread(__Thread):
                 msg = await wsconn.recv()
                 
                 if self.mtype==CONST.SERVER:
-                    #t = Thread(target = self.__onrecv, args = [msg, wsid])
-                    #t.start()
+                    t = Thread(target = self.__onrecv, args = [msg, wsid])
+                    t.start()
                     #await to_thread(self.__onrecv, args=[msg, wsid])
-                    self.__onrecv( msg, wsid )
+                    #self.__onrecv( msg, wsid )
                 elif self.mtype==CONST.CLIENT:
-                    #t = Thread(target = self.__onrecv, args = [msg])
-                    #t.start()
+                    t = Thread(target = self.__onrecv, args = [msg])
+                    t.start()
                     #await to_thread(self.__onrecv, args=[msg])
-                    self.__onrecv( msg )
+                    #self.__onrecv( msg )
                 
                 self.__pushCache(msg, wsid)
                 if wsid is not None:
