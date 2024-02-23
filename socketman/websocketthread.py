@@ -36,7 +36,7 @@ class CONST:
     CLIENT = 1
 
 
-    
+from .utils.packing import pack, unpack
 from threading import Thread as __Thread
 class _WebsocketThread(__Thread):
     '''
@@ -51,10 +51,10 @@ class _WebsocketThread(__Thread):
         if mtype==CONST.SERVER:
             self.ip = host_or_uri if isValidIPV4(host_or_uri) or host_or_uri.lower()=='localhost' else getLocalIP()
             self.serve_on = host_or_uri #if host_or_uri.lower()!='localhost' else '127.0.0.1'
-            self.__onrecv = lambda msg, wsid:print(f'server_receive from {wsid}: {msg}')
+            self.onrecv = lambda msg, wsid:print(f'server_receive from {wsid}: {msg}')
         elif mtype==CONST.CLIENT:
             self.uri = host_or_uri
-            self.__onrecv = lambda msg:print(f'client_receive from {self.uri}: {msg}')
+            self.onrecv = lambda msg:print(f'client_receive from {self.uri}: {msg}')
         self.port = port
         self.wsconns = {}
         self.__recv_cache = {None:None}
@@ -62,6 +62,8 @@ class _WebsocketThread(__Thread):
         self.__loop = new_event_loop()
         self.__future = self.__loop.create_future()
         self.stopped = False
+        self.onconnect = lambda wsconn:print(f'{wsconn} connected')
+        self.ondisconnect = lambda wsconn:print(f'{wsconn} disconnected')
         
         
     @property
@@ -76,9 +78,13 @@ class _WebsocketThread(__Thread):
     def ON_RECV(self, func):
         from typing import Callable
         if isinstance(func, Callable):
-            self.__onrecv = func
+            self.onrecv = func
         return func
         
+    def setCallback(self, func):
+        from typing import Callable
+        if isinstance(func, Callable):
+            self.onrecv = func
         
     def recv(self, wsid=None, block=True):
         # 为了兼容面向过程的习惯而设置，不推荐使用
@@ -106,6 +112,7 @@ class _WebsocketThread(__Thread):
     
     
     def send(self, msg, wsid=None):
+        msg = self.packmsg(msg)
         if wsid is None:
             result = False
             for wsid in self.wsconns:
@@ -121,26 +128,31 @@ class _WebsocketThread(__Thread):
         else:
             self.__recv_cache[wsid] += msg
             
+    def packmsg(self, msg):
+        return msg
     
+    def unpackmsg(self, msg):
+        return msg
     
     async def handleConn(self, wsconn):
         #from asyncio import to_thread
         from threading import Thread
         wsid = id(wsconn)
         self.wsconns[wsid] = wsconn
+        self.onconnect(wsconn)
         if wsid not in self.__recv_cache:
             self.__recv_cache[wsid] = None
         try:
             while not(self.stopped):
                 msg = await wsconn.recv()
-                
+                msg = self.unpackmsg(msg)
                 if self.mtype==CONST.SERVER:
-                    t = Thread(target = self.__onrecv, args = [msg, wsid])
+                    t = Thread(target = self.onrecv, args = [msg, wsid])
                     t.start()
                     #await to_thread(self.__onrecv, args=[msg, wsid])
                     #self.__onrecv( msg, wsid )
                 elif self.mtype==CONST.CLIENT:
-                    t = Thread(target = self.__onrecv, args = [msg])
+                    t = Thread(target = self.onrecv, args = [msg])
                     t.start()
                     #await to_thread(self.__onrecv, args=[msg])
                     #self.__onrecv( msg )
@@ -155,7 +167,7 @@ class _WebsocketThread(__Thread):
             print(e)
             pass
         finally:
-        
+            self.ondisconnect(wsconn)
             self.wsconns.pop(wsid, None)
             
             if wsid is not None:
@@ -212,11 +224,13 @@ class _WebsocketThread(__Thread):
     
 class WebsocketServer(_WebsocketThread):
 
-    def __init__(self, host='127.0.0.1', port=5001):
+    def __init__(self, host='127.0.0.1', port=5001, info={}):
         super().__init__(host_or_uri=host, port=port, mtype=CONST.SERVER)
+        self.info = info
     
     
 class WebsocketClient(_WebsocketThread):
 
-    def __init__(self, uri='ws://127.0.0.1:5001'):
+    def __init__(self, uri='ws://127.0.0.1:5001', info={}):
         super().__init__(host_or_uri=uri, mtype=CONST.CLIENT)
+        self.info = info

@@ -1,88 +1,47 @@
 # SocketMan
 
 - 对 [websockets](https://pypi.org/project/websockets/) 包的易用封装。
-- 在独立线程中封装了协程
-- 可以非阻塞方式交互
-- 符合面向过程习惯的send、recv方法 
+- 使用起来非常简单
+- 可以对发送内容简单加密和压缩
+- 可以用它发送任何python对象包括自定义的类
+- 注意！上述操作存在安全风险
 
- 
-# 应用场景示例
+# 简单示例
 
-- 针对flask+werkzeug的单线程模式服务器无法使用服务websocket的问题，创建独立的websocket服务。
-
-
-# 使用方法
-
-## 启动线程（服务端）
+## 服务端
 ```python
-serv = WebsocketServer('0.0.0.0', 5001)
-serv.start()
-```
-## 客户端访问地址，服务未运行时为None
-```python
-print(serv.url)
-```
-## 设置处理接收消息的回调函数
-```python
-# 有消息传入时会随消息附带wsid， wsid为传入消息的连接编号
-@serv.ON_RECV
-def func( txt, wsid):
-    print(txt)
-```    
-## 用recv方法接收，默认阻塞（不推荐）
-```python
-serv.recv()
-
-# 当设置wsid!=None时只接收对应wsid连接发送的数据
-# block=False为非阻塞模式，无消息返回None
-# 接收过程中连接关闭则raise一个RuntimeError
-serv.recv(wsid=None, block=True)
-```
-## 发送消息到客户端
-```python
-# 单个连接可以不带wsid参数，即wsid默认为None时将对所有连接广播消息
-serv.send(txt)
-serv.send(txt, wsid=None)
-```
-## 关闭线程
-```python
-# 注意，线程启动关闭是一次性行为，如需再次使用需要重新实例化
-serv.stop()
+# 建立一个回调函数处理接收的内容
+def returnmsg(msg, conn):
+    # 这个函数将接收的消息原路返回
+    print(f'send back msg:{msg}')
+    conn.send(msg)
+# 启动一个服务端
+serv = socketman.createServer(port=5010, onrecv=returnmsg)
+# 关闭服务端
+serv.close()
 ```
 
-## 检查是否已在运行
+## 客户端
 ```python
-serv.is_alive()
+# 建立一个回调函数处理接收的内容
+def printmsg(msg, conn):
+    # 这个函数将接收的消息显示出来
+    print(f'recievemsg:{msg}')
+# 连接到服务端uri
+conn = socketman.connect(uri = "ws://127.0.0.1:5010", onrecv=printmsg)
+# 发送一个自定义类(类是通过pickle封装的，所以接收端需要有该类的定义才能正确接收)
+class UserClass:
+    n = 1
+c = UserClass()
+conn.send(c)
+# 关闭连接
+conn.close()
 ```
 
-## 启动线程（客户端）
-客户端与服务端的调用逻辑基本一致
+# Tips
+- 开启AES加密需要在服务端和客户端设置相同的password，例如：
 ```python
-client = WebsocketClient('ws://localhost:5001')
-client.start()
+serv = socketman.createServer(port=5010, password='abc')
+conn = socketman.connect(uri = "ws://127.0.0.1:5010",  password='abc')
 ```
-## 设置处理接收消息的回调函数
-```python
-@client.ON_RECV
-def func( txt ):
-    print(txt)
-```    
-## 用recv方法接收，默认阻塞（不推荐）
-```python
-client.recv()
-```
-
-## 发送消息到服务端
-```python
-client.send(txt)
-```
-## 关闭线程
-```python
-# 注意，线程启动关闭是一次性行为，如需再次使用需要重新实例化
-client.stop()
-```
-## 检查是否已在运行
-```python
-client.is_alive()
-```
-
+- 不加密发送纯字符串不会进行封装，可以当作标准的websocket使用，但开启加密或发送python对象仅支持本库的服务端和客户端。

@@ -1,15 +1,22 @@
 import setuptools
+import os
 
 with open("README.md", "r", encoding='utf-8') as fh:
   long_description = fh.read()
 
+here = os.path.abspath(os.path.dirname(__file__))
+
+about = {}
+with open(os.path.join(here, 'socketman', 'version.py')) as f:
+    exec(f.read(), about)
+
 setuptools.setup(
   name="socketman",
-  version="0.1.5",
+  version=about['__version__'],
   python_requires=">=3.6",
   author="zloss",
   author_email="zlols@foxmail.com",
-  description="websocket client or server, easy to use.",
+  description="Send arbitrary Python objects via websockets",
   long_description=long_description,
   long_description_content_type="text/markdown",
   url="https://github.com/zlolss/SocketMan.py.git",
