@@ -90,7 +90,7 @@ def pack(item:Any, password:str=None, compresssize=128000) -> str:
     return package
 
 # 将任意对象封装为websocket可以发送的字符串
-def unpack(package:str|bytes, password:str=None, raw=None) -> Any:
+def unpack(package:str, password:str=None, raw=None) -> Any:
     '''
     websocket接收到的包解码为相应对象
     :param package: 待解包的对象
