@@ -14,7 +14,7 @@ setuptools.setup(
   name="socketman",
   version=about['__version__'],
   python_requires=">=3.6",
-  author="zloss",
+  author="zlols",
   author_email="zlols@foxmail.com",
   description="Send arbitrary Python objects via websockets",
   long_description=long_description,

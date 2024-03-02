@@ -6,7 +6,12 @@
 - 可以用它发送任何python对象包括自定义的类
 - 注意！上述操作存在安全风险
 
-# 简单示例
+# 安装
+```shell
+pip install socketman
+```
+
+# 简单用例
 
 ## 服务端
 ```python
