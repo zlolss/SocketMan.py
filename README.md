@@ -7,14 +7,23 @@
 - 注意！上述操作存在安全风险
 
 # 安装
+<<<<<<< HEAD
 ```shell
 pip install socketman
 ```
 
 # 简单用例
+=======
+```bash
+pip install socketman
+```
+
+# 简单示例
+>>>>>>> b33f499 (readme)
 
 ## 服务端
 ```python
+import socketman
 # 建立一个回调函数处理接收的内容
 def returnmsg(msg, conn):
     # 这个函数将接收的消息原路返回
@@ -22,12 +31,14 @@ def returnmsg(msg, conn):
     conn.send(msg)
 # 启动一个服务端
 serv = socketman.createServer(port=5010, onrecv=returnmsg)
+# 注：serv是一个线程，如果启动后结束主进程导致出错，可以加上serv.join()
 # 关闭服务端
 serv.close()
 ```
 
 ## 客户端
 ```python
+import socketman
 # 建立一个回调函数处理接收的内容
 def printmsg(msg, conn):
     # 这个函数将接收的消息显示出来
