@@ -7,19 +7,11 @@
 - 注意！上述操作存在安全风险
 
 # 安装
-<<<<<<< HEAD
-```shell
-pip install socketman
-```
-
-# 简单用例
-=======
 ```bash
 pip install socketman
 ```
 
 # 简单示例
->>>>>>> b33f499 (readme)
 
 ## 服务端
 ```python
