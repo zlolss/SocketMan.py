@@ -1,5 +1,7 @@
-# 旧版本
-from .websocketthread import WebsocketServer, WebsocketClient
+from . import manager, serialization, auto_socket
+auto_socket.序列化工具 = serialization
+auto_socket.端口管理器 = manager
 
-# 新版本
-from .v3 import createServer, connect, disconnect, stopServer, send 
+autosocket = auto_socket.autosocket
+
+
