@@ -60,3 +60,4 @@ class 二进制序列:
             python对象 = pickle.loads(序列[头长度:])
         我.结果 = python对象
         return python对象
+

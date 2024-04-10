@@ -1,6 +1,7 @@
-from .client import 自动分配端口
-from . import _var
-#from . import server
+from .client import Client
+from .common import PType
 
-#server._var = _var
-#server.cowork = cowork
+def getPortAndCharacter(pname, ptype=PType.p2p):
+    with Client() as c:
+        端口字段 = c.getport(name=pname, ptype=ptype)
+        return 端口字段.端口号, 端口字段.类型
